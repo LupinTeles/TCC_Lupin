@@ -1,0 +1,16 @@
+from __future__ import print_function 
+
+#importando addins necessarios
+import panda as pd 
+
+#Importando lista de especies
+rodentia_sp = pd.read_csv ("Scopus_Rodentia.csv", sep =",")
+
+#retirando espaco e incluindo underline como separador
+
+col= "species"
+
+rodentia_sp[col]= rodentia_sp[col].str.rstrip().str.replace(" ", "_")
+
+print(rodentia_sp)
+
