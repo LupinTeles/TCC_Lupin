@@ -1,15 +1,16 @@
-from __future__ import print_function 
-
 #importando addins necessarios
-pip install pandas
 
-import pandas as pd 
+import pandas as pd
+import pageviewapi
+from datetime import datetime, timedelta
 
-#Importando lista de especies e escolhendo colunas de interesse
+#Importando lista de especies e escolhendo colunas de interesse#
 
 columns_to_keep = ["nome_popular","order","family","species","author_name"]
 
+
 rodentia_sp = pd.read_csv ("Scopus_Rodentia.csv", sep =",", usecols=columns_to_keep)
+
 
 #retirando espaco e incluindo underline como separador
 
@@ -17,5 +18,40 @@ col= "species"
 
 rodentia_sp[col]= rodentia_sp[col].str.rstrip().str.replace(" ", "_")
 
-print(rodentia_sp)
 
+#Fazendo uma lista com as especies e definindo as datas
+
+R_lista_sp= rodentia_sp["species"].tolist()
+
+
+
+data_inicio= datetime("20150701").strftime("%Y%m%d")
+data_fim= datetime.now().strftime("%Y%m%d")
+
+#Criando funcao para puxar pageviews do wikipedia
+def get_wiki_pageviews(R_lista_sp, data_inicio, data_fim):
+    pageviews_data = {}
+    for species in R_lista_sp:
+        try:
+            views = pageviewapi.per_article('pt.wikipedia', species, 
+                                            start=data_inicio, end=data_fim, 
+                                            access='all-access', agent='user', granularity='monthly')
+            total_views = sum(item['views'] for item in views['items'])
+            pageviews_data[species] = total_views
+        except Exception as e:
+            recdate = data_inicio
+            while (recdate != data_fim):
+                recdate = timedelta(days=-1)
+                try:
+                    views = pageviewapi.per_article('pt.wikipedia', species, 
+                                                    start=recdate, 
+                                                    end=data_fim, 
+                                                    access='all-access', agent='user', granularity='monthly')
+                    total_views = sum(item['views'] for item in views['items'])
+                    pageviews_data[species] = total_views
+                    break
+                except:
+                    pass
+    print(pageviews_data)
+    return pageviews_data
+get_wiki_pageviews(R_lista_sp, data_inicio, data_fim)
